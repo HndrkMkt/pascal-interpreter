@@ -1,6 +1,6 @@
 # Token types
 
-INTEGER, PLUS, EOF = 'INTEGER', 'PLUS', 'EOF'
+INTEGER, PLUS, MINUS, EOF = 'INTEGER', 'PLUS', 'MINUS', 'EOF'
 
 
 class Token(object):
@@ -80,6 +80,11 @@ class Interpreter(object):
                 self.iterate_char()
                 return token
 
+            if self.current_char == '-':
+                token = Token(MINUS, self.current_char)
+                self.iterate_char()
+                return token
+
         if self.current_char is None:
             return Token(EOF, None)
 
@@ -106,7 +111,10 @@ class Interpreter(object):
 
         # we expect the current token to be a '+' token
         op = self.current_token
-        self.eat(PLUS)
+        if op.type == PLUS:
+            self.eat(PLUS)
+        else:
+            self.eat(MINUS)
 
         # we expect the current token to be a single-digit integer
         right = self.current_token
@@ -118,7 +126,10 @@ class Interpreter(object):
         # return the result of adding two integers,
         # thus effectively interpreting client input
 
-        result = left.value + right.value
+        if op.type == PLUS:
+            result = left.value + right.value
+        else:
+            result = left.value - right.value
         return result
 
 
