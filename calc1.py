@@ -35,8 +35,28 @@ class Interpreter(object):
         # current token instance
         self.current_token = None
 
+        self.current_char = self.text[self.pos]
+
     def error(self):
         raise Exception('Error parsing input')
+
+    def iterate_char(self):
+        self.pos += 1
+        if self.pos > len(self.text) - 1:
+            self.current_char = None
+        else:
+            self.current_char = self.text[self.pos]
+
+    def skip_whitespace(self):
+        while self.current_char is not None and self.current_char.isspace():
+            self.iterate_char()
+
+    def find_integer(self):
+        number = ''
+        while self.current_char is not None and self.current_char.isdigit():
+            number += self.current_char
+            self.iterate_char()
+        return int(number)
 
     def get_next_token(self):
         """Lexical analyzer (also known as scanner or tokenizer)
@@ -45,30 +65,23 @@ class Interpreter(object):
         One token at a time.
         """
 
-        text = self.text
+        while self.current_char is not None:
 
-        # is self.pos index past the end of the self.text?
-        # if so, return EOF token because there is no more input left
-        # to convert into tokens
-        if self.pos > len(text) - 1:
+            if self.current_char.isspace():
+                self.skip_whitespace()
+
+            if self.current_char.isdigit():
+                number = self.find_integer()
+                token = Token(INTEGER, number)
+                return token
+
+            if self.current_char == '+':
+                token = Token(PLUS, self.current_char)
+                self.iterate_char()
+                return token
+
+        if self.current_char is None:
             return Token(EOF, None)
-
-        # get a character at the position self.pos and decide
-        # what token to create based on the single character
-        current_char = text[self.pos]
-
-        # if the character is a digit then convert it to integer,
-        # create an INTEGER token, increment self.pos index to point to
-        # the next character after the digit, and return the INTEGER token
-        if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
-            self.pos += 1
-            return token
-
-        if current_char == '+':
-            token = Token(PLUS, current_char)
-            self.pos += 1
-            return token
 
         self.error()
 
